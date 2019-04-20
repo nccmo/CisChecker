@@ -1,0 +1,2 @@
+#sample_name	BAM
+test	example/test.bam
