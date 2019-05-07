@@ -23,15 +23,14 @@ def cis_check_main(args):
     bam_dict = {}
     with open(args.sample_list, 'r') as hin:
         first_line = next(hin)
-        if first_line.startswith('#'):
-            skip_rows = 1 if first_line.startswith('#') else 0
+        skip_rows = 1 if first_line.startswith('#') else 0
     hin.close()
 
     with open(args.sample_list, 'r') as hin:
         if skip_rows == 1:
             header = hin.readline()
         for line in hin:
-            F = line.rstrip('\n\r').split('\t')
+            F = line.rstrip('\n').split('\t')
             sample_name = F[0]
             bam = F[1]
             bam_dict[F[0]]= F[1]
@@ -62,28 +61,44 @@ def cis_check_main(args):
 
             if first_del_flag:
                 if args.mapping_difference:
-                    cis_check_indel.del_reads(bam_dict[F[1]], str(F[0]) + "_" + str(F[1]) + "_" + str(F[6]) + "_" + str(F[10]) + "_" + "combined_cis_tmp1.txt", F[2], F[3], F[4], F[5])
+                    cis_check_indel.del_reads(bam_dict[F[1]], str(F[0]) + "_" + str(F[1]) + "_" + str(F[6]) + "_" + str(F[10]) + "_" + "combined_cis_tmp1.txt", F[2], F[3], F[4], F[5],
+                                              args.baseq, args.mapq, args.overlaps, args.stepper, args.orphans)
                 else:
-                    cis_check_indel.del_reads_accurate(bam_dict[F[1]], str(F[0]) + "_" + str(F[1]) + "_" + str(F[6]) + "_" + str(F[10]) + "_" + "combined_cis_tmp1.txt", F[2], F[3], F[4], F[5])
+                    cis_check_indel.del_reads_accurate(bam_dict[F[1]], str(F[0]) + "_" + str(F[1]) + "_" + str(F[6]) + "_" + str(F[10]) + "_" + "combined_cis_tmp1.txt", F[2], F[3], F[4], F[5],
+                                                       args.baseq, args.mapq, args.overlaps, args.stepper, args.orphans)
                 first = "DEL"
             if first_ins_flag:
                 if args.mapping_difference:
-                    cis_check_indel.ins_reads(bam_dict[F[1]], str(F[0]) + "_" + str(F[1]) + "_" + str(F[6]) + "_" + str(F[10]) + "_" + "combined_cis_tmp1.txt", F[2], F[3], F[4], F[5])
+                    cis_check_indel.ins_reads(bam_dict[F[1]], str(F[0]) + "_" + str(F[1]) + "_" + str(F[6]) + "_" + str(F[10]) + "_" + "combined_cis_tmp1.txt", F[2], F[3], F[4], F[5],
+                                              args.baseq, args.mapq, args.overlaps, args.stepper, args.orphans)
                 else:
-                    cis_check_indel.ins_reads_accurate(bam_dict[F[1]], str(F[0]) + "_" + str(F[1]) + "_" + str(F[6]) + "_" + str(F[10]) + "_" + "combined_cis_tmp1.txt", F[2], F[3], F[4], F[5])
+                    cis_check_indel.ins_reads_accurate(bam_dict[F[1]], str(F[0]) + "_" + str(F[1]) + "_" + str(F[6]) + "_" + str(F[10]) + "_" + "combined_cis_tmp1.txt", F[2], F[3], F[4], F[5],
+                                                       args.baseq, args.mapq, args.overlaps, args.stepper, args.orphans)
                 first = "INS"
             if first_snv_flag:
-                cis_check_indel.snv_reads(bam_dict[F[1]], str(F[0]) + "_" + str(F[1]) + "_" + str(F[6]) + "_" + str(F[10]) + "_" + "combined_cis_tmp1.txt", F[2], F[3], F[4], F[5])
+                cis_check_indel.snv_reads(bam_dict[F[1]], str(F[0]) + "_" + str(F[1]) + "_" + str(F[6]) + "_" + str(F[10]) + "_" + "combined_cis_tmp1.txt", F[2], F[3], F[4], F[5],
+                                          args.baseq, args.mapq, args.overlaps, args.stepper, args.orphans)
                 first = "SNV"
             
             if second_del_flag:
-                cis_check_indel.del_reads(bam_dict[F[1]], str(F[0]) + "_" + str(F[1]) + "_" + str(F[6]) + "_" + str(F[10]) + "_" + "combined_cis_tmp2.txt", F[2], F[7], F[8], F[9])
+                if args.mapping_difference:
+                    cis_check_indel.del_reads(bam_dict[F[1]], str(F[0]) + "_" + str(F[1]) + "_" + str(F[6]) + "_" + str(F[10]) + "_" + "combined_cis_tmp2.txt", F[2], F[7], F[8], F[9],
+                                              args.baseq, args.mapq, args.overlaps, args.stepper, args.orphans)
+                else:
+                    cis_check_indel.del_reads_accurate(bam_dict[F[1]], str(F[0]) + "_" + str(F[1]) + "_" + str(F[6]) + "_" + str(F[10]) + "_" + "combined_cis_tmp2.txt", F[2], F[7], F[8], F[9],
+                                                       args.baseq, args.mapq, args.overlaps, args.stepper, args.orphans)
                 second = "DEL"
             if second_ins_flag:
-                cis_check_indel.ins_reads(bam_dict[F[1]], str(F[0]) + "_" + str(F[1]) + "_" + str(F[6]) + "_" + str(F[10]) + "_" + "combined_cis_tmp2.txt", F[2], F[7], F[8], F[9])
+                if args.mapping_difference:
+                    cis_check_indel.ins_reads(bam_dict[F[1]], str(F[0]) + "_" + str(F[1]) + "_" + str(F[6]) + "_" + str(F[10]) + "_" + "combined_cis_tmp2.txt", F[2], F[7], F[8], F[9],
+                                              args.baseq, args.mapq, args.overlaps, args.stepper, args.orphans)
+                else:
+                    cis_check_indel.ins_reads_accurate(bam_dict[F[1]], str(F[0]) + "_" + str(F[1]) + "_" + str(F[6]) + "_" + str(F[10]) + "_" + "combined_cis_tmp2.txt", F[2], F[7], F[8], F[9],
+                                                       args.baseq, args.mapq, args.overlaps, args.stepper, args.orphans)
                 second = "INS"
             if second_snv_flag:
-                cis_check_indel.snv_reads(bam_dict[F[1]], str(F[0]) + "_" + str(F[1]) + "_" + str(F[6]) + "_" + str(F[10]) + "_" + "combined_cis_tmp2.txt", F[2], F[7], F[8], F[9])
+                cis_check_indel.snv_reads(bam_dict[F[1]], str(F[0]) + "_" + str(F[1]) + "_" + str(F[6]) + "_" + str(F[10]) + "_" + "combined_cis_tmp2.txt", F[2], F[7], F[8], F[9],
+                                          args.baseq, args.mapq, args.overlaps, args.stepper, args.orphans)
                 second = "SNV"
 
             cis_check_indel.merge_results(str(F[0]) + "_" + str(F[1]) + "_" + str(F[6]) + "_" + str(F[10]) + "_" + "combined_cis_tmp1.txt", 

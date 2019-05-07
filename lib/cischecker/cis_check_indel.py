@@ -6,7 +6,7 @@ import sys
 import re
 
 
-def cis_check_snv_snv(bam_file, output_file, chromosome, pos1, pos2, ref1, alt1, ref2, alt2):
+def cis_check_snv_snv(bam_file, output_file, chromosome, pos1, pos2, ref1, alt1, ref2, alt2, baseq, mapq, overlaps, stepper, orphans):
 
     hout = open(output_file, 'w')
     print >> hout, '\t'.join(["read_ID", "pos1", "pos2", "output1", "output2"])
@@ -19,7 +19,7 @@ def cis_check_snv_snv(bam_file, output_file, chromosome, pos1, pos2, ref1, alt1,
     left_read_dict = {}
     tabixErrorFlag1 = 0
     try:
-        records_one = bamfile.pileup(str(chromosome), int(pos1)-1, int(pos1)+1, min_base_quality=0, min_mapping_quality=0, ignore_overlaps=False, stepper="nofilter", ignore_orphans=False)
+        records_one = bamfile.pileup(str(chromosome), int(pos1)-1, int(pos1)+1, min_base_quality=baseq, min_mapping_quality=mapq, ignore_overlaps=overlaps, stepper=stepper, ignore_orphans=orphans)
     except Exception as inst:
         print >> sys.stderr, "%s: %s" % (type(inst), inst.args)
         tabixErrorFlag1 = 1
@@ -31,7 +31,7 @@ def cis_check_snv_snv(bam_file, output_file, chromosome, pos1, pos2, ref1, alt1,
     right_read_dict = {}
     tabixErrorFlag2 = 0
     try:
-        records_two = bamfile.pileup(str(chromosome), int(pos2)-1, int(pos2)+1, min_base_quality=0, min_mapping_quality=0, ignore_overlaps=False, stepper="nofilter", ignore_orphans=False)
+        records_two = bamfile.pileup(str(chromosome), int(pos2)-1, int(pos2)+1, min_base_quality=baseq, min_mapping_quality=mapq, ignore_overlaps=overlaps, stepper=stepper, ignore_orphans=orphans)
     except Exception as inst:
         print >> sys.stderr, "%s: %s" % (type(inst), inst.args)
         tabixErrorFlag2 = 1
@@ -48,39 +48,7 @@ def cis_check_snv_snv(bam_file, output_file, chromosome, pos1, pos2, ref1, alt1,
     hout.close()
 
 
-def del_reads(bam_file, output_file, chromosome, pos, ref, alt):
-
-    hout = open(output_file, 'w')
-    del_reads = []
-    bamfile = pysam.AlignmentFile(bam_file, "rb")
-    re_deln =re.compile(r'([0-9]+)D')
-
-    records_one = bamfile.pileup(str(chromosome), int(pos)-1, int(pos), min_base_quality=0, min_mapping_quality=0, ignore_overlaps=False, stepper="nofilter", ignore_orphans=False)
-    for pileupcolumn in records_one:
-        if int(pileupcolumn.pos) == int(pos)-2:
-            for pileupread in pileupcolumn.pileups:
-                if pileupread.indel != 0 or pileupread.is_del == True:
-                    if alt != "-":
-                        del_len = len(ref) - len(alt)
-                    else:
-                        del_len = len(ref)
-                    deln_match = re_deln.search(pileupread.alignment.cigarstring)
-                    if deln_match is None: 
-                        continue
-                    deln = deln_match.group(1)
-                    if int(deln) == del_len:
-                        print >> hout, str(pileupread.alignment.query_name) + '\t' + "alt"
-                        del_reads.append(str(pileupread.alignment.query_name))
-
-    records_one = bamfile.pileup(str(chromosome), int(pos)-1, int(pos), min_base_quality=0, min_mapping_quality=0, ignore_overlaps=False, stepper="nofilter", ignore_orphans=False)
-    for pileupcolumn in records_one:
-        for pileupread in pileupcolumn.pileups:
-            if pileupread.alignment.query_name not in del_reads:
-                print >> hout, str(pileupread.alignment.query_name) + '\t' + "ref"
-    hout.close()
-
-
-def del_reads_accurate(bam_file, output_file, chromosome, pos, ref, alt):
+def del_reads(bam_file, output_file, chromosome, pos, ref, alt, baseq, mapq, overlaps, stepper, orphans):
 
     hout = open(output_file, 'w')
     if alt != "-":
@@ -88,9 +56,29 @@ def del_reads_accurate(bam_file, output_file, chromosome, pos, ref, alt):
     else:
         del_len = len(ref)
 
-    del_reads = []
     bamfile = pysam.AlignmentFile(bam_file, "rb")
-    records_one = bamfile.pileup(str(chromosome), int(pos)-1, int(pos), min_base_quality=0, min_mapping_quality=0, ignore_overlaps=False, stepper="nofilter", ignore_orphans=False)
+    records_one = bamfile.pileup(str(chromosome), int(pos)-1, int(pos), min_base_quality=baseq, min_mapping_quality=mapq, ignore_overlaps=overlaps, stepper=stepper, ignore_orphans=orphans)
+
+    for pileupcolumn in records_one:
+        if int(pileupcolumn.pos) >= int(pos)-2-3 and int(pileupcolumn.pos) <= int(pos)-2+3:
+            for pileupread in pileupcolumn.pileups:
+                if pileupread.indel < 0 and pileupread.indel >= -del_len-1 and pileupread.indel <= -del_len+1:
+                    print >> hout, str(pileupread.alignment.query_name) + '\t' + "alt"
+                else:
+                    print >> hout, str(pileupread.alignment.query_name) + '\t' + "ref"
+    hout.close()
+
+
+def del_reads_accurate(bam_file, output_file, chromosome, pos, ref, alt, baseq, mapq, overlaps, stepper, orphans):
+
+    hout = open(output_file, 'w')
+    if alt != "-":
+        del_len = len(ref) - len(alt)
+    else:
+        del_len = len(ref)
+
+    bamfile = pysam.AlignmentFile(bam_file, "rb")
+    records_one = bamfile.pileup(str(chromosome), int(pos)-1, int(pos), min_base_quality=baseq, min_mapping_quality=mapq, ignore_overlaps=overlaps, stepper=stepper, ignore_orphans=orphans)
 
     for pileupcolumn in records_one:
         if int(pileupcolumn.pos) == int(pos)-2:
@@ -102,7 +90,7 @@ def del_reads_accurate(bam_file, output_file, chromosome, pos, ref, alt):
     hout.close()
 
 
-def ins_reads(bam_file, output_file, chromosome, pos, ref, alt):
+def ins_reads(bam_file, output_file, chromosome, pos, ref, alt, baseq, mapq, overlaps, stepper, orphans):
 
     hout = open(output_file, 'w')
     if ref != "-":
@@ -110,31 +98,19 @@ def ins_reads(bam_file, output_file, chromosome, pos, ref, alt):
     else:
         ins_len = len(alt)
 
-    ins_reads = []
     bamfile = pysam.AlignmentFile(bam_file, "rb")
-    re_insn =re.compile(r'([0-9]+)I')
-    records_one = bamfile.pileup(str(chromosome), int(pos)-1, int(pos), min_base_quality=0, min_mapping_quality=0, ignore_overlaps=False, stepper="nofilter", ignore_orphans=False)
+    records_one = bamfile.pileup(str(chromosome), int(pos)-1, int(pos), min_base_quality=baseq, min_mapping_quality=mapq, ignore_overlaps=overlaps, stepper=stepper, ignore_orphans=orphans)
     for pileupcolumn in records_one:
-        if int(pileupcolumn.pos) == int(pos)-1:
+        if int(pileupcolumn.pos) >= int(pos)-1-3 and int(pileupcolumn.pos) <= int(pos)-1+3:
             for pileupread in pileupcolumn.pileups:
-                if pileupread.indel != 0 or pileupread.is_del == True:
-                    insn_match = re_insn.search(pileupread.alignment.cigarstring)
-                    if insn_match is None: 
-                        continue
-                    insn = insn_match.group(1)
-                    if int(insn) == ins_len:
-                        print >> hout, str(pileupread.alignment.query_name) + '\t' + "alt"
-                        ins_reads.append(str(pileupread.alignment.query_name))
-
-    records_one = bamfile.pileup(str(chromosome), int(pos)-1, int(pos), min_base_quality=0, min_mapping_quality=0, ignore_overlaps=False, stepper="nofilter", ignore_orphans=False)
-    for pileupcolumn in records_one:
-        for pileupread in pileupcolumn.pileups:
-            if pileupread not in ins_reads:
-                print >> hout, str(pileupread.alignment.query_name) + '\t' + "ref"
+                if pileupread.indel > 0 and pileupread.indel >= ins_len-1 and pileupread.indel <= ins_len+1:
+                    print >> hout, str(pileupread.alignment.query_name) + '\t' + "alt"
+                else:
+                    print >> hout, str(pileupread.alignment.query_name) + '\t' + "ref"
     hout.close()
 
 
-def ins_reads_accurate(bam_file, output_file, chromosome, pos, ref, alt):
+def ins_reads_accurate(bam_file, output_file, chromosome, pos, ref, alt, baseq, mapq, overlaps, stepper, orphans):
 
     hout = open(output_file, 'w')
     if ref != "-":
@@ -143,7 +119,7 @@ def ins_reads_accurate(bam_file, output_file, chromosome, pos, ref, alt):
         ins_len = len(alt)
 
     bamfile = pysam.AlignmentFile(bam_file, "rb")
-    records_one = bamfile.pileup(str(chromosome), int(pos)-1, int(pos), min_base_quality=0, min_mapping_quality=0, ignore_overlaps=False, stepper="nofilter", ignore_orphans=False)
+    records_one = bamfile.pileup(str(chromosome), int(pos)-1, int(pos), min_base_quality=baseq, min_mapping_quality=mapq, ignore_overlaps=overlaps, stepper=stepper, ignore_orphans=orphans)
     for pileupcolumn in records_one:
         if int(pileupcolumn.pos) == int(pos)-1:
             for pileupread in pileupcolumn.pileups:
@@ -154,11 +130,11 @@ def ins_reads_accurate(bam_file, output_file, chromosome, pos, ref, alt):
     hout.close()
 
 
-def snv_reads(bam_file, output_file, chromosome, pos, ref, alt):
+def snv_reads(bam_file, output_file, chromosome, pos, ref, alt, baseq, mapq, overlaps, stepper, orphans):
 
     hout = open(output_file, 'w')
     bamfile = pysam.AlignmentFile(bam_file, "rb")
-    records_one = bamfile.pileup(str(chromosome), int(pos)-1, int(pos), min_base_quality=0, min_mapping_quality=0, ignore_overlaps=False, stepper="nofilter", ignore_orphans=False)
+    records_one = bamfile.pileup(str(chromosome), int(pos)-1, int(pos), min_base_quality=baseq, min_mapping_quality=mapq, ignore_overlaps=overlaps, stepper=stepper, ignore_orphans=orphans)
     for pileupcolumn in records_one:
         for pileupread in pileupcolumn.pileups:
             if int(pileupcolumn.pos) == int(pos)-1:

@@ -56,6 +56,23 @@ cis_check.add_argument("sample_list", metavar = "sample_list.txt", type = str,
 cis_check.add_argument("output_file", default = None, type = str,
                        help = "path to output file")
 
+
+cis_check.add_argument("--baseq", default = 0, type = int,
+                       help = "Minimum base quality (samtools option; default = 0)")
+
+cis_check.add_argument("--mapq", default = 0, type = int,
+                       help = "Minimum mapping quality (samtools option; default = 0)")
+
+cis_check.add_argument("--overlaps", default = True, action = 'store_false',
+                       help = "If set to True, detect if read pairs overlap and only take the higher quality base (samtools option; default True)")
+
+cis_check.add_argument("--stepper",  choices = ["all", "nofilter", "samtools"], default = "all", 
+                       help = "The stepper controls how the iterator advances. (samtools option; default all)")
+
+cis_check.add_argument("--orphans", default = True, action = 'store_false',
+                       help = "Ignore orphans (paired reads that are not in a proper pair) (samtools option; default True)")
+
+
 cis_check.add_argument("-v", "--vaf", default = False, action = 'store_true', help = "use VAF (variant allele fraction) information")
 
 cis_check.add_argument("-m", "--mapping_difference", default = False, action = 'store_true', 
