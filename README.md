@@ -61,17 +61,18 @@ If  there are more than three mutations in a same gene in a same sample, list of
 
 ```
 $ cischecker listing -h
-usage: Cis_Checker listing [-h] [--gene GENE] [--sample SAMPLE] input.maf output_file
+usage: cischecker listing [-h] [-g GENE] [-s SAMPLE] [-v] input.maf output_file
 
 positional arguments:
-  input.maf        path to input MAF file
-  output_file      path to output file
+  input.maf             path to input MAF file
+  output_file           path to output file
 
 optional arguments:
-  -h, --help       show this help message and exit
-  --gene GENE      specify the gene you want to check (if you want to choose multiple genes, separate them with colon) (default: all genes)
-  --sample SAMPLE  specify the sample you want to check (if you want to choose multiple samples, separate them with colon) (default: all samples)
-
+  -h, --help            show this help message and exit
+  -g GENE, --gene GENE  specify the gene you want to check (if you want to choose multiple genes, separate them with colon) (default: all genes)
+  -s SAMPLE, --sample SAMPLE
+                        specify the sample you want to check (if you want to choose multiple samples, separate them with colon) (default: all samples)
+  -v, --vaf             use VAF (variant allele fraction) information
 ```
 
 Example
@@ -85,7 +86,7 @@ Second, check if multiple mutations are located in cis.
 
 ```
 $ cischecker cis_check -h
-usage: cischecker cis_check [-h] [-v] [-m] [-d] multiple_mutation_list sample_list.txt output_file
+usage: cischecker cis_check [-h] [--baseq BASEQ] [--mapq MAPQ] [--overlaps] [--stepper {all,nofilter,samtools}] [--orphans] [-v] [-m] [-d] multiple_mutation_list sample_list.txt output_file
 
 positional arguments:
   multiple_mutation_list
@@ -95,11 +96,16 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
+  --baseq BASEQ         Minimum base quality (samtools option; default = 0) (default: 0)
+  --mapq MAPQ           Minimum mapping quality (samtools option; default = 0) (default: 0)
+  --overlaps            If set to True, detect if read pairs overlap and only take the higher quality base (samtools option; default True) (default: True)
+  --stepper {all,nofilter,samtools}
+                        The stepper controls how the iterator advances. (samtools option; default all) (default: all)
+  --orphans             Ignore orphans (paired reads that are not in a proper pair) (samtools option; default True) (default: True)
   -v, --vaf             use VAF (variant allele fraction) information (default: False)
   -m, --mapping_difference
                         Indel mapping differs between mapping tools. If MAF file and BAM file were mapped with a different mapping tool (or same tool with different parameters), use this argument. (default: False)
   -d, --debug           debug function (default: False)
-
 ```
 
 Example

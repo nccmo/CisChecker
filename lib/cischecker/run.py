@@ -4,7 +4,6 @@ import pandas as pd
 import subprocess, sys
 import argparse
 import listing
-import cis_check
 import cis_check_indel
 import numexpr
 import re
