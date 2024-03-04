@@ -5,9 +5,9 @@ CisChecker is a software to check if two mutations in a same gene are located in
 
 ## Citation
 Please cite the following paper when using CisChecker.
-```
+
 Saito, Y., Koya, J., Araki, M. et al. Landscape and function of multiple mutations within individual oncogenes. Nature 582, 95–99 (2020). https://doi.org/10.1038/s41586-020-2175-2
-```
+
 
 ## Dependency
 ### Python
