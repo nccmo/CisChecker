@@ -3,6 +3,12 @@
 ## Introduction
 CisChecker is a software to check if two mutations in a same gene are located in the same allele (in cis) or not (in trans) using next-generation sequencing data.
 
+## Citation
+Please cite the following paper when using CisChecker.
+```
+Saito, Y., Koya, J., Araki, M. et al. Landscape and function of multiple mutations within individual oncogenes. Nature 582, 95–99 (2020). https://doi.org/10.1038/s41586-020-2175-2
+```
+
 ## Dependency
 ### Python
 Python (2.7), pysam (0.14.1), pandas(0.16.2) packages
